@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "name": "Prepara SP",
+  "version": "1.0",
+  "description": "Auxílio rápido para atividades",
+  "permissions": ["clipboardRead","storage"],
+  "action": {"default_popup":"popup.html"}
+}
