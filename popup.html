@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Prepara SP</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:420px;min-height:350px;font-family:Arial;background:#f0f2f5;padding:12px}
+.container{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.1)}
+h1{font-size:18px;color:#2e7d32;margin-bottom:12px;display:flex;align-items:center;gap:8px;border-bottom:2px solid #e8f5e9;padding-bottom:10px}
+h1 small{font-size:11px;background:#4CAF50;color:#fff;padding:2px 10px;border-radius:12px}
+textarea{width:100%;min-height:70px;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;background:#fafafa}
+textarea:focus{outline:none;border-color:#4CAF50}
+.btn-group{display:flex;gap:6px;margin:8px 0}
+button{flex:1;padding:8px;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;transition:.2s}
+.btn-azul{background:#2196F3;color:#fff}
+.btn-verde{background:#4CAF50;color:#fff}
+.btn-vermelho{background:#f44336;color:#fff}
+button:hover{transform:scale(1.02);opacity:.9}
+#resposta{display:none;margin-top:12px}
+.card{background:#f8f9fa;border-radius:8px;padding:10px;margin-bottom:8px;border-left:3px solid #4CAF50}
+.card.answer{border-left-color:#ff9800;background:#fff8e1}
+.card-header{font-weight:700;font-size:12px;color:#555;margin-bottom:6px}
+.card-body{font-size:12px;color:#333;line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.grid div{background:#fff;padding:5px 8px;border-radius:4px}
+.passo{display:flex;gap:8px;background:#fff;padding:5px 8px;border-radius:4px;margin:2px 0}
+.num{background:#4CAF50;color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.resposta{font-size:18px;font-weight:800;color:#2e7d32;text-align:center;padding:10px;background:#e8f5e9;border-radius:6px;border:2px dashed #4CAF50}
+.dica{font-size:11px;color:#666;background:#fff3e0;padding:6px 10px;border-radius:4px;margin-top:6px;text-align:center}
+.footer{text-align:center;font-size:10px;color:#999;margin-top:10px;padding-top:8px;border-top:1px solid #eee}
+.loading{display:inline-block;width:14px;height:14px;border:2px solid #f3f3f3;border-top:2px solid #4CAF50;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360)}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>📚 Prepara SP <small>Rápido</small></h1>
+<textarea id="q" placeholder="Cole a questão aqui..."></textarea>
+<div class="btn-group">
+<button class="btn-azul" id="colar">📋 Colar</button>
+<button class="btn-verde" id="analisar">🔍 Analisar</button>
+<button class="btn-vermelho" id="limpar">🗑️</button>
+</div>
+<div id="resposta">
+<div class="card"><div class="card-header">📊 Análise</div><div id="analise" class="card-body"></div></div>
+<div class="card"><div class="card-header">💡 Passos</div><div id="passos" class="card-body"></div></div>
+<div class="card answer"><div class="card-header">✅ Resposta</div><div id="resp" class="card-body"></div></div>
+<div class="card"><div class="card-header">📝 Pratique</div><div id="pratica" class="card-body"></div></div>
+</div>
+<div class="footer" id="footer">💪 Estude com sabedoria</div>
+</div>
+<script>
+// ===== PREPARA SP - SCRIPT COMPLETO =====
+document.addEventListener('DOMContentLoaded',()=>{
+const q=document.getElementById('q'),analisar=document.getElementById('analisar')
+const colar=document.getElementById('colar'),limpar=document.getElementById('limpar')
+const resposta=document.getElementById('resposta'),analise=document.getElementById('analise')
+const passos=document.getElementById('passos'),resp=document.getElementById('resp')
+const pratica=document.getElementById('pratica'),footer=document.getElementById('footer')
+
+// ===== FUNÇÃO PRINCIPAL =====
+function analisarQuestao(){
+const texto=q.value.trim()
+if(!texto){alert('⚠️ Cole uma questão!');return}
+analisar.innerHTML='⏳...';analisar.disabled=true
+resposta.style.display='block'
+
+setTimeout(()=>{
+// Análise
+const dados=analisarTexto(texto)
+analise.innerHTML=`
+<div class="grid">
+<div><b>📚</b> ${dados.materia}</div>
+<div><b>🎯</b> ${dados.tema}</div>
+<div><b>📊</b> ${dados.nivel}</div>
+<div><b>🎲</b> ${dados.tipo}</div>
+</div>`
+
+// Resolução
+const resolucao=gerarResolucao(texto,dados)
+passos.innerHTML=resolucao.passos.map((p,i)=>
+`<div class="passo"><span class="num">${i+1}</span>${p}</div>`).join('')
+
+// Resposta (com delay)
+setTimeout(()=>{
+resp.innerHTML=`
+<div class="resposta">${resolucao.resposta}</div>
+<div class="dica">💡 ${resolucao.dica}</div>`
+},500)
+
+// Prática
+pratica.innerHTML=gerarPratica(dados).map((p,i)=>
+`<div class="passo"><span class="num" style="background:#9C27B0">${i+1}</span>${p}</div>`).join('')
+
+// Histórico
+salvarHistorico(texto,dados,resolucao)
+analisar.innerHTML='🔍 Analisar';analisar.disabled=false
+},300)
+}
+
+// ===== ANALISAR TEXTO =====
+function analisarTexto(t){
+const tL=t.toLowerCase()
+const materias={
+'Matemática':['x=','+','-','%','equação','porcentagem','fraç','geometria','área','perímetro'],
+'Português':['crase','acentuação','concordância','interpretação','texto','gramática'],
+'Ciências':['célula','energia','átomo','reação','física','química','biologia'],
+'História':['história','idade','civilização','império','revolução','colônia'],
+'Geografia':['mapa','clima','relevo','população','território','bioma']
+}
+let materia='Não identificada',max=0
+for(const[mat,palavras]of Object.entries(materias)){
+let c=0;for(const p of palavras)if(tL.includes(p))c++
+if(c>max){max=c;materia=mat}
+}
+let tema='Geral'
+if(materia=='Matemática'){
+if(tL.includes('equação')||tL.includes('x='))tema='Equações'
+else if(tL.includes('%')||tL.includes('porcentagem'))tema='Porcentagem'
+else if(tL.includes('fraç'))tema='Frações'
+else if(tL.includes('geometria')||tL.includes('área'))tema='Geometria'
+}else if(materia=='Português'){
+if(tL.includes('crase'))tema='Crase'
+else if(tL.includes('acentuação'))tema='Acentuação'
+else if(tL.includes('concordância'))tema='Concordância'
+}
+const palavras=t.split(' ').length
+let nivel='Fácil';if(palavras>20)nivel='Médio';if(palavras>40)nivel='Difícil'
+let tipo='Discursiva'
+if(tL.includes('a)')||tL.includes('a)'))tipo='Múltipla Escolha'
+if(tL.includes('?'))tipo='Pergunta Aberta'
+return{materia,tema,nivel,tipo}
+}
+
+// ===== GERAR RESOLUÇÃO =====
+function gerarResolucao(t,d){
+let passos=[],resposta='Siga os passos',dica='Leia com atenção'
+const nums=t.match(/\d+\.?\d*/g)
+if(d.materia=='Matemática'&&nums&&nums.length>=2){
+const n1=parseFloat(nums[0]),n2=parseFloat(nums[1]),n3=nums.length>2?parseFloat(nums[2]):null
+if(t.includes('%')||t.includes('porcentagem')){
+if(n3){const r=(n2/100)*n1;passos=[`📊 ${n2}% de ${n1}`,`📝 (${n2}÷100)×${n1}`,`🧮 ${n2/100}×${n1}=${r.toFixed(2)}`,`✅ ${r.toFixed(2)}`];resposta=`${r.toFixed(2)}`;dica='Multiplique pelo percentual dividido por 100'}
+}else if(t.includes('x')&&t.includes('=')&&n3){
+const a=n1,b=n2,c=n3,x=(c-b)/a
+passos=[`📝 ${a}x+${b}=${c}`,`🔄 ${a}x=${c}-${b}`,`🧮 ${a}x=${c-b}`,`✅ x=${(c-b)}÷${a}=${x.toFixed(2)}`]
+resposta=`x=${x.toFixed(2)}`;dica='Isole a variável de um lado da igualdade'
+}else if(t.includes('+')||t.includes('soma')){const r=n1+n2;passos=[`📊 ${n1}+${n2}`,`🧮 ${r}`,`✅ ${r}`];resposta=`${r}`;dica='Some com atenção'}
+else if(t.includes('-')||t.includes('subtra')){const r=n1-n2;passos=[`📊 ${n1}-${n2}`,`🧮 ${r}`,`✅ ${r}`];resposta=`${r}`;dica='Subtraia com cuidado'}
+else if(t.includes('×')||t.includes('multiplic')){const r=n1*n2;passos=[`📊 ${n1}×${n2}`,`🧮 ${r}`,`✅ ${r}`];resposta=`${r}`;dica='Multiplique com atenção'}
+else if(t.includes('÷')||t.includes('divis')){const r=n1/n2;passos=[`📊 ${n1}÷${n2}`,`🧮 ${r.toFixed(2)}`,`✅ ${r.toFixed(2)}`];resposta=`${r.toFixed(2)}`;dica='Divida com atenção'}
+else{passos=['📖 Leia o enunciado','🔍 Identifique os dados','📝 Calcule o necessário','✅ Verifique o resultado'];dica='Identifique a operação adequada'}
+}else if(d.materia=='Português'){
+if(t.includes('crase')){passos=['📖 Identifique a palavra','🔍 Verifique se é feminina','📝 Substitua por masculina','✅ Se der "ao", tem crase'];resposta='Use crase quando houver fusão "a"+"a"';dica='Substitua por masculino. Se aparecer "ao" → crase'}
+else if(t.includes('acentuação')){passos=['📖 Identifique a sílaba tônica','🔍 Veja se é oxítona/paroxítona','📝 Aplique a regra','✅ Verifique a acentuação'];resposta='Siga as regras de acentuação';dica='Proparoxítonas sempre têm acento'}
+else{passos=['📖 Leia com atenção','🔍 Identifique a ideia principal','📝 Analise as informações','✅ Responda com base no texto'];resposta='Leia o texto para encontrar a resposta';dica='A resposta está no texto'}
+}else{
+passos=['📖 Leia com atenção','🔍 Identifique o tema','📝 Relembre os conceitos','✅ Elabore sua resposta']
+resposta='Analise o conteúdo e aplique os conceitos';dica='Revise os conceitos principais'
+}
+return{passos,resposta,dica}
+}
+
+// ===== GERAR PRÁTICA =====
+function gerarPratica(d){
+const exs=['Pratique questões similares','Crie exercícios com números diferentes','Explique para um colega']
+if(d.materia=='Matemática'){exs.push('Crie 3 problemas aplicando o conceito')}
+if(d.materia=='Português'){exs.push('Escreva usando o tema estudado')}
+return exs
+}
+
+// ===== SALVAR HISTÓRICO =====
+function salvarHistorico(t,d,r){
+try{
+let h=JSON.parse(localStorage.getItem('preparaSp')||'[]')
+h.unshift({texto:t.substring(0,80)+(t.length>80?'...':''),materia:d.materia,tema:d.tema,resposta:r.resposta,data:new Date().toLocaleString()})
+if(h.length>20)h.length=20
+localStorage.setItem('preparaSp',JSON.stringify(h))
+const c=JSON.parse(localStorage.getItem('preparaSp')||'[]').length
+footer.innerHTML=`💪 ${c} questões • v1.0`
+}catch(e){}
+}
+
+// ===== CARREGAR HISTÓRICO =====
+try{
+const h=JSON.parse(localStorage.getItem('preparaSp')||'[]')
+if(h.length>0)footer.innerHTML=`💪 ${h.length} questões • v1.0`
+}catch(e){}
+
+// ===== EVENTOS =====
+analisar.addEventListener('click',analisarQuestao)
+q.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key=='Enter'){e.preventDefault();analisarQuestao()}})
+colar.addEventListener('click',async()=>{
+try{const t=await navigator.clipboard.readText();q.value=t;setTimeout(analisarQuestao,400)}
+catch{alert('Use Ctrl+V para colar')}
+})
+limpar.addEventListener('click',()=>{q.value='';resposta.style.display='none';analisar.innerHTML='🔍 Analisar';analisar.disabled=false;q.focus()})
+q.addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'})
+console.log('🎓 Prepara SP carregado! Ctrl+Enter para analisar')
+})
+</script>
+</body>
+</html>
